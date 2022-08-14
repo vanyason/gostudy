@@ -1,3 +1,8 @@
+/**
+* A simple program, where you can find examples of the flag ,
+* csv, goroutines usages
+*/
+
 package main
 
 import (
