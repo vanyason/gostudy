@@ -1,0 +1,18 @@
+[
+    {
+        "path": "/urlshort",
+        "url": "https://github.com/gophercises/urlshort"
+    },
+    {
+        "path": "/urlshort-final",
+        "url": "https://github.com/gophercises/urlshort/tree/solution"
+    },
+    {
+        "path": "/urlshort-godoc",
+        "url": "https://godoc.org/github.com/gophercises/urlshort"
+    },
+    {
+        "path": "/yaml-godoc",
+        "url": "https://godoc.org/gopkg.in/yaml.v2"
+    }
+]

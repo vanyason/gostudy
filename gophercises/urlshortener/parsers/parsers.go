@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"gopkg.in/yaml.v2"
@@ -20,6 +21,11 @@ type Fileinfo struct {
 	filetype Filetype
 }
 
+type parserHelperStruct struct {
+	Path string
+	Url  string
+}
+
 func ParseCmdFlags() (file Fileinfo, err error) {
 	flag.StringVar(&file.filename, "file", "urls.yaml", "json or yaml file with the url maps")
 	flag.Parse()
@@ -36,36 +42,28 @@ func ParseCmdFlags() (file Fileinfo, err error) {
 }
 
 func ParseFile(file Fileinfo) (map[string]string, error) {
-	f, err := os.ReadFile(file.filename)
+	data, err := os.ReadFile(file.filename)
 	if err != nil {
 		return nil, err
 	}
 
+	var unmarshaler func(in []byte, out interface{}) (err error)
 	if file.filetype == Yaml {
-		return ParseYaml(f)
+		unmarshaler = yaml.Unmarshal
 	} else if file.filetype == Json {
-		return ParseJson(f)
+		unmarshaler = json.Unmarshal
+	} else {
+		return nil, fmt.Errorf("can not parse unknown file format")
 	}
 
-	return nil, fmt.Errorf("can not parse unknown file format")
-}
-
-func ParseYaml(data []byte) (map[string]string, error) {
-	/* create a yaml struct and parse data into it */
-	type yamlStruct struct {
-		Path string `yaml:"path"`
-		Url  string `yaml: "url"`
-	}
-
-	var yamlStructs []yamlStruct
-	err := yaml.Unmarshal(data, &yamlStructs)
+	var parserHelperStructs []parserHelperStruct
+	err = unmarshaler(data, &parserHelperStructs)
 	if err != nil {
 		return nil, err
 	}
 
-	/* convert yaml struct to a map */
 	pathsToUrls := make(map[string]string)
-	for _, s := range yamlStructs {
+	for _, s := range parserHelperStructs {
 		if s.Path == "" || s.Url == "" {
 			return nil, fmt.Errorf("failed while parsing file to the map. empty field")
 		}
@@ -74,9 +72,4 @@ func ParseYaml(data []byte) (map[string]string, error) {
 	}
 
 	return pathsToUrls, nil
-}
-
-/* To implement */
-func ParseJson(data []byte) (map[string]string, error) {
-	return nil, nil
 }
