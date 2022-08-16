@@ -18,3 +18,4 @@
 * ## Awesomes
     * [Awesome list](https://awesome-go.com/#forms)
     * [Project structure](https://github.com/golang-standards/project-layout)
+    * [Most common mistakes](https://github.com/golang/go/wiki/CodeReviewComments#receiver-type)
