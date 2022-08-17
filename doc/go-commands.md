@@ -11,3 +11,6 @@
  * **go build** - compile, make binary and name it as a folder
  * **go build -o *binname*** - same but with the provided name
  * **go install** - put bin to the $GOBIN
+
+ ## Testing
+ * **go test** - run tests
