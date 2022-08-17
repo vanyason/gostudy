@@ -1,9 +1,7 @@
 /**
 * Program starts a server and apply url mapping
 *
-* You can find go mod, Yaml, Json, Enum, BoltDB SQL, http and tests examples
-*
-* Note! All the handlers use MapHandler under the hood
+* You can find go mod, Yaml, Json, Enum, BoltDB SQL (https://github.com/boltdb/bolt), http and tests examples
  */
 
 package main
@@ -11,6 +9,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"urlshortener/db"
 	"urlshortener/parsers"
 )
 
@@ -34,21 +33,38 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 }
 
 func main() {
-	file, err := parsers.ParseCmdFlags()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	file := parsers.ParseCmdFlags()
+	urlsPaths := make(map[string]string)
 
-	urlsPaths, err := parsers.ParseFile(file)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	if file.Type == parsers.Unknown {
+		fmt.Println("no file - using db")
 
-	mux := defaultMux()
-	mapHandler := MapHandler(urlsPaths, mux)
-	fmt.Println("Map data: " , urlsPaths)
+		database, err := db.Open()
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer database.Close()
+
+		database.FillDB()
+
+		urlsPaths = database.GetMap()
+	} else {
+		fmt.Println("file provided")
+		
+		var err error
+		urlsPaths, err = parsers.ParseFile(file)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+	}
+	
+	mapHandler := MapHandler(urlsPaths, defaultMux())
+
+	fmt.Println("Map data: ", urlsPaths)
 	fmt.Println("Starting the server on :8080")
 	http.ListenAndServe(":8080", mapHandler)
 }

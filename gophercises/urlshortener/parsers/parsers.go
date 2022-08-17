@@ -14,11 +14,12 @@ type Filetype int64
 const (
 	Yaml Filetype = iota
 	Json
+	Unknown
 )
 
 type Fileinfo struct {
-	filename string
-	filetype Filetype
+	Name string
+	Type Filetype
 }
 
 type parserHelperStruct struct {
@@ -26,31 +27,32 @@ type parserHelperStruct struct {
 	Url  string
 }
 
-func ParseCmdFlags() (file Fileinfo, err error) {
-	flag.StringVar(&file.filename, "file", "urls.yaml", "json or yaml file with the url maps")
+func ParseCmdFlags() (file Fileinfo) {
+	flag.StringVar(&file.Name, "file", "", "json or yaml file with the url maps")
 	flag.Parse()
 
-	if strings.HasSuffix(file.filename, "json") {
-		file.filetype = Json
-		return file, nil
-	} else if strings.HasSuffix(file.filename, "yaml") {
-		file.filetype = Yaml
-		return file, nil
-	} else {
-		return file, fmt.Errorf("invalid file is provided")
+	if strings.HasSuffix(file.Name, "json") {
+		file.Type = Json
+		return file
+	} else if strings.HasSuffix(file.Name, "yaml") {
+		file.Type = Yaml
+		return file
 	}
+
+	file.Type = Unknown
+	return file
 }
 
 func ParseFile(file Fileinfo) (map[string]string, error) {
-	data, err := os.ReadFile(file.filename)
+	data, err := os.ReadFile(file.Name)
 	if err != nil {
 		return nil, err
 	}
 
 	var unmarshaler func(in []byte, out interface{}) (err error)
-	if file.filetype == Yaml {
+	if file.Type == Yaml {
 		unmarshaler = yaml.Unmarshal
-	} else if file.filetype == Json {
+	} else if file.Type == Json {
 		unmarshaler = json.Unmarshal
 	} else {
 		return nil, fmt.Errorf("can not parse unknown file format")
