@@ -1,46 +1,74 @@
-package main
+package frontend
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"text/template"
 
 	"ownadventure/pkg/cyoa"
-	"ownadventure/pkg/cyoa/frontend"
 )
 
-func main() {
-	port, filename, _ := cyoa.ParseCmdArgs()
-	story, err := cyoa.JsonToStory(filename)
-	if err != nil {
-		fmt.Println(err)
+type handler struct {
+	s      cyoa.Story
+	t      *template.Template
+	pathFn func(t *http.Request) string
+}
+
+func defaultPathFn(r *http.Request) string {
+	path := strings.TrimSpace(r.URL.Path)
+	if path == "" || path == "/" {
+		path = "/intro"
+	}
+	return path[1:]
+}
+
+var tmplt *template.Template
+
+func init() {
+	tmplt = template.Must(template.New("").Parse(defaultHandlerTemplate))
+}
+
+func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := h.pathFn(r)
+
+	if chapter, ok := h.s[path]; ok {
+		err := h.t.Execute(w, chapter)
+		if err != nil {
+			log.Printf("%v", err)
+			http.Error(w, "Something went wrong...", http.StatusInternalServerError)
+		}
 		return
 	}
+	http.Error(w, "Chapter not found.", http.StatusNotFound)
 
-	tpl := template.Must(template.New("").Parse(storyTmpl))
-
-	h := frontend.NewHandler(story,
-		frontend.WithTemplate(tpl),
-		frontend.WithPathFunc(pathFn))
-
-	mux := http.NewServeMux()
-	mux.Handle("/story/", h)
-	fmt.Printf("Using story in %s\n", filename)
-	fmt.Printf("Starting a server on port: %d\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), mux))
 }
 
-func pathFn(r *http.Request) string {
-	path := strings.TrimSpace(r.URL.Path)
-	if path == "/story" || path == "/story/" {
-		path = "/story/intro"
+type HandlerOption func(h *handler)
+
+func WithTemplate(t *template.Template) HandlerOption {
+	return func(h *handler) {
+		h.t = t
 	}
-	return path[len("/story/"):]
 }
 
-var storyTmpl = `
+func WithPathFunc(fn func(r *http.Request) string) HandlerOption {
+	return func(h *handler) {
+		h.pathFn = fn
+	}
+}
+
+func NewHandler(s cyoa.Story, opts ...HandlerOption) http.Handler {
+	h := handler{s, tmplt, defaultPathFn}
+
+	for _, op := range opts {
+		op(&h)
+	}
+
+	return h
+}
+
+var defaultHandlerTemplate = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -56,7 +84,7 @@ var storyTmpl = `
       {{if .Options}}
         <ul>
         {{range .Options}}
-          <li><a href="/story/{{.Chapter}}">{{.Text}}</a></li>
+          <li><a href="/{{.Chapter}}">{{.Text}}</a></li>
         {{end}}
         </ul>
       {{else}}
