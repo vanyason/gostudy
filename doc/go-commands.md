@@ -14,3 +14,6 @@
 
  ## Testing
  * **go test** - run tests
+
+ ## Get package
+ * **go get *package_name*** - install package
