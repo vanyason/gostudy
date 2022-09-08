@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	"htmllinkparser/pkg/examples"
-	"htmllinkparser/pkg/parser"
+	"htmllinkparser/internal/examples"
+	"htmllinkparser/internal/parser"
 )
 
 func main() {
-	r := strings.NewReader(examples.Ex3)
+	r := strings.NewReader(examples.Ex1)
 
-	links, err := link.Parse(r)
+	links, err := parser.Parse(r)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 
-	fmt.Printf("%+v\n", links)
+	fmt.Printf("%+v\n\n ---------- Main finished ----------\n\n", links)
 }

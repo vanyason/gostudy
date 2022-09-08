@@ -1,11 +1,9 @@
-package link
+package parser
 
 import (
-	"fmt"
+	"golang.org/x/net/html"
 	"io"
 	"strings"
-
-	"golang.org/x/net/html"
 )
 
 /**
@@ -30,10 +28,7 @@ func Parse(r io.Reader) ([]Link, error) {
 	var links []Link
 	for _, node := range nodes {
 		links = append(links, buildLink(node))
-		fmt.Println(node)
 	}
-
-	// dfs(doc, "")
 
 	return links, nil
 }
@@ -78,19 +73,4 @@ func buildLink(n *html.Node) Link {
 	ret.Text = text(n)
 
 	return ret
-}
-
-/**
- * Depth search func
- */
-func dfs(n *html.Node, padding string) {
-	msg := n.Data
-	if n.Type == html.ElementNode {
-		msg = "<" + msg + ">"
-	}
-
-	fmt.Println(padding, msg)
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		dfs(c, padding+"  ")
-	}
 }

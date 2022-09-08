@@ -14,6 +14,7 @@
 
  ## Testing
  * **go test** - run tests
+ * **go test -v** - **verbose** run tests and prints logs (t.Log)
 
  ## Get package
  * **go get *package_name*** - install package
